@@ -29,6 +29,20 @@ export type BookingItem = {
   currency: string;
 };
 
+export type TransactionStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
+
+export type TransactionItem = {
+  _id: string;
+  amount: number;
+  currency: string;
+  method: 'CARD' | 'KNET' | 'APPLE_PAY' | 'GOOGLE_PAY' | 'PAYPAL' | 'CASH';
+  status: TransactionStatus;
+  createdAt: string;
+  bookingLabel: string;
+  providerAmount?: number;
+  providerPayoutStatus?: 'PENDING' | 'PAID';
+};
+
 export const mockServices: ServiceItem[] = [
   {
     _id: 's1',
@@ -103,5 +117,30 @@ export const mockBookings: BookingItem[] = [
     status: 'PENDING',
     amount: 40,
     currency: 'TND',
+  },
+];
+
+export const mockTransactions: TransactionItem[] = [
+  {
+    _id: 'tx1',
+    amount: 70,
+    currency: 'TND',
+    method: 'CARD',
+    status: 'SUCCESS',
+    createdAt: '2026-04-05T10:20:00.000Z',
+    bookingLabel: 'serviceNames.apartmentCleaning - Amira Nettoyage',
+    providerAmount: 63,
+    providerPayoutStatus: 'PAID',
+  },
+  {
+    _id: 'tx2',
+    amount: 50,
+    currency: 'TND',
+    method: 'CASH',
+    status: 'PENDING',
+    createdAt: '2026-04-06T14:10:00.000Z',
+    bookingLabel: 'serviceNames.windowCleaning - Amira Nettoyage',
+    providerAmount: 0,
+    providerPayoutStatus: 'PENDING',
   },
 ];

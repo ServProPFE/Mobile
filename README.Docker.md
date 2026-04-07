@@ -1,22 +1,55 @@
-### Building and running your application
+# ServPro Mobile - Docker Guide
 
-When you're ready, start your application by running:
-`docker compose up --build`.
+Guide Docker pour l'application mobile ServPro (Expo).
 
-Your application will be available at http://localhost:8081.
+## Prerequis
 
-### Deploying your application to the cloud
+- Docker Desktop (Compose v2)
+- Backend ServPro accessible (local ou distant)
 
-First, build your image, e.g.: `docker build -t myapp .`.
-If your cloud uses a different CPU architecture than your development
-machine (e.g., you are on a Mac M1 and your cloud provider is amd64),
-you'll want to build the image for that platform, e.g.:
-`docker build --platform=linux/amd64 -t myapp .`.
+## Lancer en local avec Docker Compose
 
-Then, push it to your registry, e.g. `docker push myregistry.com/myapp`.
+Depuis `ServProMobile/`:
 
-Consult Docker's [getting started](https://docs.docker.com/go/get-started-sharing/)
-docs for more detail on building and pushing.
+```bash
+docker compose up --build
+```
 
-### References
-* [Docker's Node.js guide](https://docs.docker.com/language/nodejs/)
+Ports exposes:
+- `8081` (Expo web / Metro)
+- `19000` (Expo dev server)
+- `19001` (Expo bundler)
+
+## Build image seule
+
+Depuis `ServProMobile/`:
+
+```bash
+docker build -t servpro-mobile:latest .
+docker run --rm -p 8081:8081 -p 19000:19000 -p 19001:19001 servpro-mobile:latest
+```
+
+## Push registry (exemple)
+
+```bash
+docker tag servpro-mobile:latest docker.io/<your-user>/servpro-mobile:v1
+docker push docker.io/<your-user>/servpro-mobile:v1
+```
+
+## Kubernetes
+
+- Manifest mobile: `k8s/09-mobile.yaml`
+- Image mappee via `k8s/kustomization.yaml` (`servpro-mobile`)
+- Hote ingress configure: `mobile.servpro.tn` / `mobile.servpro.local`
+
+## Troubleshooting
+
+1. Container unhealthy:
+- verifier que le port `8081` est libre
+- verifier les logs: `docker compose logs expo-app`
+
+2. Mobile ne joint pas l'API:
+- verifier l'URL backend dans la config Expo et/ou variables d'environnement
+
+3. Erreur de build npm:
+- supprimer cache local Docker puis rebuild: `docker builder prune -f`

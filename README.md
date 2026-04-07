@@ -48,6 +48,25 @@ npm run ios
 npm run web
 ```
 
+## Run with Docker
+
+From `ServProMobile/`:
+
+```bash
+docker compose up --build
+```
+
+Exposed ports:
+- `8081` (Expo web)
+- `19000` (Expo dev server)
+- `19001` (Expo bundler)
+
+## Kubernetes Deployment
+
+- Deployment/Service manifest: `k8s/09-mobile.yaml`
+- Included in `k8s/kustomization.yaml`
+- Ingress hosts: `mobile.servpro.tn`, `mobile.servpro.local`
+
 ## API Configuration
 
 API base URL is resolved from Expo config extra field if available:
@@ -58,6 +77,8 @@ Otherwise defaults are:
 
 - Android emulator: `http://10.0.2.2:4000`
 - Other platforms: `http://localhost:4000`
+
+For containerized/Kubernetes runs, ensure backend DNS/URL is reachable from the mobile runtime environment.
 
 ## Localization
 

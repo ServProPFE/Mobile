@@ -1,10 +1,19 @@
 import { API_ENDPOINTS } from '@/services/apiConfig';
 import { apiService } from '@/services/apiService';
-import { mockOffers, mockServices, type BookingItem, type OfferItem, type ServiceItem } from '@/data/mockData';
+import {
+  mockOffers,
+  mockServices,
+  mockTransactions,
+  type BookingItem,
+  type OfferItem,
+  type ServiceItem,
+  type TransactionItem,
+} from '@/data/mockData';
 
 type ApiItems<T> = { items?: T[] } | T[];
 let localBookings: BookingItem[] = [];
 let localServices: ServiceItem[] = [];
+let localTransactions: TransactionItem[] = [];
 
 type BookingApiItem = Partial<BookingItem> & {
   _id?: string;
@@ -32,6 +41,22 @@ type CreateBookingInput = {
   amount: number;
   currency: string;
   clientId?: string;
+};
+
+type GetTransactionsInput = {
+  userType?: 'CLIENT' | 'PROVIDER' | 'ADMIN';
+};
+
+type TransactionApiItem = Partial<TransactionItem> & {
+  _id?: string;
+  id?: string;
+  booking?: {
+    service?: { name?: string };
+    provider?: { name?: string };
+  };
+  createdAt?: string;
+  providerAmount?: number;
+  providerPayoutStatus?: 'PENDING' | 'PAID';
 };
 
 const parseApiErrorMessage = (error: unknown): string => {
@@ -113,6 +138,23 @@ const normalizeBooking = (item: BookingApiItem): BookingItem => {
   };
 };
 
+const normalizeTransaction = (item: TransactionApiItem): TransactionItem => {
+  const serviceName = item.booking?.service?.name || 'services.title';
+  const providerName = item.booking?.provider?.name || 'ServPro Provider';
+
+  return {
+    _id: item._id || item.id || `tx-${Date.now()}`,
+    amount: Number(item.amount ?? 0),
+    currency: item.currency || 'TND',
+    method: (item.method as TransactionItem['method']) || 'CASH',
+    status: (item.status as TransactionItem['status']) || 'PENDING',
+    createdAt: item.createdAt || new Date().toISOString(),
+    bookingLabel: `${serviceName} - ${providerName}`,
+    providerAmount: Number(item.providerAmount ?? 0),
+    providerPayoutStatus: item.providerPayoutStatus || 'PENDING',
+  };
+};
+
 const canCreateBackendBooking = (input: CreateBookingInput) => {
   return !!(input.clientId && input.providerId && input.serviceId && input.scheduledAt && input.address);
 };
@@ -188,6 +230,23 @@ export const servproDataService = {
       return normalized;
     } catch (error) {
       throw new Error(parseApiErrorMessage(error));
+    }
+  },
+
+  async getTransactions(input?: GetTransactionsInput): Promise<TransactionItem[]> {
+    try {
+      const data = await apiService.get<ApiItems<TransactionApiItem>>(API_ENDPOINTS.TRANSACTIONS);
+      const items = normalizeItems(data).map(normalizeTransaction);
+
+      if (input?.userType === 'PROVIDER') {
+        localTransactions = items.filter((item) => item.status === 'SUCCESS' || item.providerPayoutStatus === 'PENDING');
+      } else {
+        localTransactions = items;
+      }
+
+      return localTransactions;
+    } catch {
+      return localTransactions.length ? localTransactions : mockTransactions;
     }
   },
 };

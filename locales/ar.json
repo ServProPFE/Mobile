@@ -148,6 +148,7 @@
   "transactions": {
     "title": "معاملاتي",
     "subtitle": "عرض سجل معاملاتك",
+    "providerSubtitle": "تابع الدفعات الناجحة والمبالغ المحوّلة إلى حسابك",
     "filters": {
       "all": "الكل",
       "PENDING": "قيد الانتظار",
@@ -159,7 +160,13 @@
     "method": "طريقة الدفع",
     "booking": "الحجز",
     "status": "الحالة",
+    "providerAmount": "مبلغ المزوّد",
+    "payoutStatus": "حالة التحويل",
     "date": "التاريخ",
+    "payout": {
+      "PENDING": "قيد الانتظار",
+      "PAID": "مدفوع"
+    },
     "methods": {
       "CARD": "بطاقة",
       "CASH": "نقدًا",

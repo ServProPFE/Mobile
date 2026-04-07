@@ -18,5 +18,7 @@ export const API_ENDPOINTS = {
   ACTIVE_OFFERS: `${API_BASE_URL}/offers?active=true`,
   BOOKINGS: `${API_BASE_URL}/bookings`,
   BOOKING_BY_ID: (id: string) => `${API_BASE_URL}/bookings/${id}`,
+  TRANSACTIONS: `${API_BASE_URL}/transactions`,
+  TRANSACTION_BY_ID: (id: string) => `${API_BASE_URL}/transactions/${id}`,
   RESERVATION_DETAILS: `${API_BASE_URL}/reservation-details`,
 };

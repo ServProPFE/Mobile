@@ -91,6 +91,10 @@ export default function ProfileScreen() {
                   <Ionicons name="calendar-outline" size={18} color={AppTheme.colors.secondary} />
                   <Text style={styles.actionText}>{t('nav.myBookings')}</Text>
                 </Link>
+                <Link href={'/transactions' as never} style={styles.actionItem}>
+                  <Ionicons name="wallet-outline" size={18} color={AppTheme.colors.primary} />
+                  <Text style={styles.actionText}>{t('nav.myTransactions')}</Text>
+                </Link>
               </View>
 
               <Pressable style={styles.logoutBtn} onPress={() => logout()}>

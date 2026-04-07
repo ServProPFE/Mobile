@@ -148,6 +148,7 @@
   "transactions": {
     "title": "My Transactions",
     "subtitle": "View your transaction history",
+    "providerSubtitle": "Track successful payments and amounts transferred to your account",
     "filters": {
       "all": "All",
       "PENDING": "Pending",
@@ -159,7 +160,13 @@
     "method": "Payment Method",
     "booking": "Booking",
     "status": "Status",
+    "providerAmount": "Amount for provider",
+    "payoutStatus": "Payout status",
     "date": "Date",
+    "payout": {
+      "PENDING": "Pending",
+      "PAID": "Paid"
+    },
     "methods": {
       "CARD": "Card",
       "CASH": "Cash",
