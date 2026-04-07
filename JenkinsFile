@@ -4,6 +4,8 @@ pipeline {
 	parameters {
 		booleanParam(name: 'deploy_k8s', defaultValue: true, description: 'Deploy mobile image to Kubernetes after successful checks')
 		string(name: 'dockerhub_credential_id', defaultValue: '', description: 'Jenkins username/password credential ID for Docker Hub')
+		string(name: 'docker_image_repo', defaultValue: 'docker.io/hechmi10/servpro-mobile', description: 'Docker image repository to push/deploy (example: docker.io/<username>/servpro-mobile)')
+		string(name: 'kubeconfig_credential_id', defaultValue: '', description: 'Jenkins secret file credential ID containing kubeconfig for kubectl access')
 	}
 
 	triggers {
@@ -12,7 +14,7 @@ pipeline {
 	}
 
 	environment {
-		IMAGE_REPO = 'docker.io/hechmi10/servpro-mobile'
+		IMAGE_REPO = "${params.docker_image_repo}"
 		IMAGE_TAG = "build-${BUILD_NUMBER}"
 		CONTAINER_NAME = 'servpro-mobile-ci'
 		K8S_NAMESPACE = 'servpro'
@@ -39,6 +41,32 @@ pipeline {
 			steps {
 				echo 'Building mobile image...'
 				bat 'docker build -t %IMAGE_REPO%:latest -t %IMAGE_REPO%:%IMAGE_TAG% .'
+			}
+		}
+
+		stage('Validate Docker Hub Auth') {
+			when {
+				expression { params.dockerhub_credential_id?.trim() }
+			}
+			steps {
+				echo 'Validating Docker Hub authentication before push...'
+				withCredentials([usernamePassword(credentialsId: params.dockerhub_credential_id.trim(), usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+					powershell '''
+						$ErrorActionPreference = "Stop"
+						$env:DOCKERHUB_PASSWORD | docker login -u $env:DOCKERHUB_USERNAME --password-stdin
+						if ($LASTEXITCODE -ne 0) {
+							throw "Docker login failed. Ensure Jenkins username is your Docker Hub username (not email) and password is a PAT token with write permission."
+						}
+
+						$repo = "${env:IMAGE_REPO}"
+						if ($repo -notmatch "/") {
+							throw "Invalid docker_image_repo format: $repo"
+						}
+
+						Write-Host "Docker login succeeded. Target repository: $repo"
+						docker logout
+					'''
+				}
 			}
 		}
 
@@ -84,9 +112,22 @@ pipeline {
 				withCredentials([usernamePassword(credentialsId: params.dockerhub_credential_id.trim(), usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
 					powershell '''
 						$ErrorActionPreference = "Stop"
+
 						$env:DOCKERHUB_PASSWORD | docker login -u $env:DOCKERHUB_USERNAME --password-stdin
+						if ($LASTEXITCODE -ne 0) {
+							throw "Docker login failed. Check dockerhub_credential_id username/password and repository permissions for ${env:IMAGE_REPO}."
+						}
+
 						docker push ${env:IMAGE_REPO}:latest
+						if ($LASTEXITCODE -ne 0) {
+							throw "Failed to push ${env:IMAGE_REPO}:latest"
+						}
+
 						docker push ${env:IMAGE_REPO}:${env:IMAGE_TAG}
+						if ($LASTEXITCODE -ne 0) {
+							throw "Failed to push ${env:IMAGE_REPO}:${env:IMAGE_TAG}"
+						}
+
 						docker logout
 					'''
 				}
@@ -95,25 +136,23 @@ pipeline {
 
 		stage('Deploy To Kubernetes') {
 			when {
-				expression { params.deploy_k8s }
+				allOf {
+					expression { params.deploy_k8s }
+					expression { params.kubeconfig_credential_id?.trim() }
+				}
 			}
 			steps {
 				echo 'Deploying mobile to Kubernetes...'
-				powershell '''
-					$kustomizePath = "..\\k8s"
-					if (Test-Path $kustomizePath) {
-						Write-Host "Applying manifests from $kustomizePath"
-						kubectl apply -k $kustomizePath
-					} else {
-						Write-Host "Kustomize path $kustomizePath not found. Skipping kubectl apply -k and continuing with rollout update."
-					}
-
-					if (-not "${params.dockerhub_credential_id}".Trim()) {
-						Write-Host "Docker Hub credential not provided. Deploying using locally built image tag: ${env:IMAGE_REPO}:${env:IMAGE_TAG}"
-					}
-				'''
-				bat 'kubectl set image deployment/%K8S_DEPLOYMENT% %K8S_CONTAINER%=%IMAGE_REPO%:%IMAGE_TAG% -n %K8S_NAMESPACE%'
-				bat 'kubectl rollout status deployment/%K8S_DEPLOYMENT% -n %K8S_NAMESPACE% --timeout=180s'
+				withCredentials([file(credentialsId: params.kubeconfig_credential_id.trim(), variable: 'KUBECONFIG_FILE')]) {
+					powershell '''
+						$ErrorActionPreference = "Stop"
+						$env:KUBECONFIG = $env:KUBECONFIG_FILE
+						kubectl version --client
+						kubectl get namespace ${env:K8S_NAMESPACE} | Out-Null
+					'''
+					bat 'set KUBECONFIG=%KUBECONFIG_FILE% && kubectl set image deployment/%K8S_DEPLOYMENT% %K8S_CONTAINER%=%IMAGE_REPO%:%IMAGE_TAG% -n %K8S_NAMESPACE%'
+					bat 'set KUBECONFIG=%KUBECONFIG_FILE% && kubectl rollout status deployment/%K8S_DEPLOYMENT% -n %K8S_NAMESPACE% --timeout=180s'
+				}
 			}
 		}
 	}
