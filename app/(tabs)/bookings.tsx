@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,18 +32,32 @@ const toDate = (value?: string) => {
 
 export default function BookingsScreen() {
   const { t } = useTranslation();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [bookings, setBookings] = useState<BookingItem[]>([]);
 
-  useEffect(() => {
+  const loadBookings = useCallback(async () => {
     if (!isAuthenticated) {
+      setBookings([]);
       return;
     }
-    (async () => {
-      const data = await servproDataService.getBookings();
-      setBookings(data);
-    })();
-  }, [isAuthenticated]);
+    const userId = user?._id ?? user?.id;
+    const data = await servproDataService.getBookings(
+      user?.type === 'PROVIDER'
+        ? { providerId: userId }
+        : { clientId: userId },
+    );
+    setBookings(data);
+  }, [isAuthenticated, user?._id, user?.id, user?.type]);
+
+  useEffect(() => {
+    loadBookings();
+  }, [loadBookings]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadBookings();
+    }, [loadBookings]),
+  );
 
   const bookingStats = useMemo(() => {
     const total = bookings.length;

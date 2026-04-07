@@ -35,6 +35,24 @@ const parseScheduledAt = (datePart: string, timePart: string) => {
   return parsed;
 };
 
+const toRefId = (value: unknown): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'object' && value !== null && '_id' in value) {
+    const id = (value as { _id?: unknown })._id;
+    return typeof id === 'string' ? id : undefined;
+  }
+  if (typeof value === 'object' && value !== null && 'id' in value) {
+    const id = (value as { id?: unknown }).id;
+    return typeof id === 'string' ? id : undefined;
+  }
+  return undefined;
+};
+
 export default function BookingScreen() {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
@@ -67,6 +85,8 @@ export default function BookingScreen() {
     () => services.find((item) => item._id === normalizedServiceId),
     [services, normalizedServiceId],
   );
+  const providerId = toRefId(service?.provider);
+  const clientId = user?._id ?? user?.id;
 
   const isClient = user?.type === 'CLIENT';
 
@@ -83,6 +103,11 @@ export default function BookingScreen() {
 
     if (!service) {
       Alert.alert(t('booking.error'), t('service.notFound'));
+      return;
+    }
+
+    if (!providerId) {
+      Alert.alert(t('booking.error'), t('booking.error'));
       return;
     }
 
@@ -106,6 +131,7 @@ export default function BookingScreen() {
     try {
       await servproDataService.createBooking({
         serviceId: service._id,
+        providerId,
         serviceName: service.name,
         providerName: 'ServPro Provider',
         scheduledAt: scheduledDate.toISOString(),
@@ -113,7 +139,7 @@ export default function BookingScreen() {
         notes: notes.trim(),
         amount: service.priceMin,
         currency: service.currency,
-        clientId: user?._id,
+        clientId,
       });
 
       Alert.alert(t('common.save'), t('booking.success'));

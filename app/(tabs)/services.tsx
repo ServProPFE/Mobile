@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -26,12 +27,20 @@ export default function ServicesScreen() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | 'ALL'>('ALL');
 
-  useEffect(() => {
-    (async () => {
-      const data = await servproDataService.getServices();
-      setServices(data);
-    })();
+  const loadServices = useCallback(async () => {
+    const data = await servproDataService.getServices();
+    setServices(data);
   }, []);
+
+  useEffect(() => {
+    loadServices();
+  }, [loadServices]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadServices();
+    }, [loadServices]),
+  );
 
   const filtered = useMemo(() => {
     return services.filter((item) => {

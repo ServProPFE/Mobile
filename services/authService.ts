@@ -4,6 +4,7 @@ import { storage } from '@/services/storage';
 export type UserType = 'CLIENT' | 'PROVIDER';
 
 export type AuthUser = {
+  id?: string;
   _id?: string;
   type: UserType;
   name: string;

@@ -2,6 +2,7 @@ export type ServiceCategory = 'PLOMBERIE' | 'ELECTRICITE' | 'CLIMATISATION' | 'N
 
 export type ServiceItem = {
   _id: string;
+  provider?: string | { _id?: string; name?: string };
   name: string;
   category: ServiceCategory;
   description: string;

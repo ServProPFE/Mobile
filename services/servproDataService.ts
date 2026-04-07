@@ -1,9 +1,10 @@
 import { API_ENDPOINTS } from '@/services/apiConfig';
 import { apiService } from '@/services/apiService';
-import { mockBookings, mockOffers, mockServices, type BookingItem, type OfferItem, type ServiceItem } from '@/data/mockData';
+import { mockOffers, mockServices, type BookingItem, type OfferItem, type ServiceItem } from '@/data/mockData';
 
 type ApiItems<T> = { items?: T[] } | T[];
-let localBookings: BookingItem[] = [...mockBookings];
+let localBookings: BookingItem[] = [];
+let localServices: ServiceItem[] = [];
 
 type BookingApiItem = Partial<BookingItem> & {
   _id?: string;
@@ -22,6 +23,7 @@ type BookingApiItem = Partial<BookingItem> & {
 
 type CreateBookingInput = {
   serviceId: string;
+  providerId?: string;
   serviceName: string;
   providerName?: string;
   scheduledAt: string;
@@ -32,6 +34,18 @@ type CreateBookingInput = {
   clientId?: string;
 };
 
+const parseApiErrorMessage = (error: unknown): string => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return 'Failed to create booking';
+};
+
+type GetBookingsInput = {
+  clientId?: string;
+  providerId?: string;
+};
+
 const normalizeItems = <T,>(payload: ApiItems<T>): T[] => {
   if (Array.isArray(payload)) {
     return payload;
@@ -40,6 +54,39 @@ const normalizeItems = <T,>(payload: ApiItems<T>): T[] => {
     return payload.items;
   }
   return [];
+};
+
+const mergeBookings = (primary: BookingItem[], secondary: BookingItem[]): BookingItem[] => {
+  const merged = new Map<string, BookingItem>();
+
+  for (const booking of primary) {
+    merged.set(booking._id, booking);
+  }
+  for (const booking of secondary) {
+    if (!merged.has(booking._id)) {
+      merged.set(booking._id, booking);
+    }
+  }
+
+  return Array.from(merged.values());
+};
+
+const isLocalBooking = (booking: BookingItem) => booking._id.startsWith('local-');
+
+const withBookingQuery = (input?: GetBookingsInput) => {
+  if (!input?.clientId && !input?.providerId) {
+    return API_ENDPOINTS.BOOKINGS;
+  }
+
+  const params = new URLSearchParams();
+  if (input.clientId) {
+    params.set('clientId', input.clientId);
+  }
+  if (input.providerId) {
+    params.set('providerId', input.providerId);
+  }
+
+  return `${API_ENDPOINTS.BOOKINGS}?${params.toString()}`;
 };
 
 const normalizeBooking = (item: BookingApiItem): BookingItem => {
@@ -66,14 +113,22 @@ const normalizeBooking = (item: BookingApiItem): BookingItem => {
   };
 };
 
+const canCreateBackendBooking = (input: CreateBookingInput) => {
+  return !!(input.clientId && input.providerId && input.serviceId && input.scheduledAt && input.address);
+};
+
 export const servproDataService = {
   async getServices(): Promise<ServiceItem[]> {
     try {
       const data = await apiService.get<ApiItems<ServiceItem>>(API_ENDPOINTS.SERVICES);
       const items = normalizeItems(data);
-      return items.length ? items : mockServices;
+      if (items.length) {
+        localServices = items;
+        return localServices;
+      }
+      return localServices.length ? localServices : mockServices;
     } catch {
-      return mockServices;
+      return localServices.length ? localServices : mockServices;
     }
   },
 
@@ -87,11 +142,13 @@ export const servproDataService = {
     }
   },
 
-  async getBookings(): Promise<BookingItem[]> {
+  async getBookings(input?: GetBookingsInput): Promise<BookingItem[]> {
     try {
-      const data = await apiService.get<ApiItems<BookingApiItem>>(API_ENDPOINTS.BOOKINGS);
+      const data = await apiService.get<ApiItems<BookingApiItem>>(withBookingQuery(input));
       const items = normalizeItems(data);
-      localBookings = items.length ? items.map(normalizeBooking) : localBookings;
+      const normalized = items.map(normalizeBooking);
+      const optimisticOnly = localBookings.filter(isLocalBooking);
+      localBookings = mergeBookings(normalized, optimisticOnly);
       return localBookings;
     } catch {
       return localBookings;
@@ -99,23 +156,26 @@ export const servproDataService = {
   },
 
   async createBooking(input: CreateBookingInput): Promise<BookingItem> {
-    const payload = {
-      service: input.serviceId,
-      serviceName: input.serviceName,
-      providerName: input.providerName,
-      clientId: input.clientId,
-      expectedAt: input.scheduledAt,
-      scheduledAt: input.scheduledAt,
-      address: input.address,
-      notes: input.notes,
-      totalPrice: input.amount,
-      amount: input.amount,
-      currency: input.currency,
-      status: 'PENDING',
-    };
+    if (!canCreateBackendBooking(input)) {
+      throw new Error('Missing required booking data');
+    }
 
     try {
-      const created = await apiService.post<BookingApiItem>(API_ENDPOINTS.BOOKINGS, payload);
+      const detail = await apiService.post<{ _id: string }>(API_ENDPOINTS.RESERVATION_DETAILS, {
+        description: input.notes,
+        address: input.address,
+        urgent: false,
+      });
+
+      const created = await apiService.post<BookingApiItem>(API_ENDPOINTS.BOOKINGS, {
+        client: input.clientId,
+        provider: input.providerId,
+        service: input.serviceId,
+        expectedAt: input.scheduledAt,
+        status: 'PENDING',
+        detail: detail._id,
+      });
+
       const normalized = normalizeBooking({
         ...created,
         serviceName: created.serviceName || input.serviceName,
@@ -126,18 +186,8 @@ export const servproDataService = {
       });
       localBookings = [normalized, ...localBookings];
       return normalized;
-    } catch {
-      const fallback: BookingItem = {
-        _id: `local-${Date.now()}`,
-        serviceName: input.serviceName,
-        providerName: input.providerName || 'ServPro Provider',
-        scheduledAt: input.scheduledAt,
-        status: 'PENDING',
-        amount: input.amount,
-        currency: input.currency,
-      };
-      localBookings = [fallback, ...localBookings];
-      return fallback;
+    } catch (error) {
+      throw new Error(parseApiErrorMessage(error));
     }
   },
 };
