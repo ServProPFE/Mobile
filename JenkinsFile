@@ -3,9 +3,9 @@ pipeline {
 
 	parameters {
 		booleanParam(name: 'deploy_k8s', defaultValue: true, description: 'Deploy mobile image to Kubernetes after successful checks')
-		string(name: 'dockerhub_credential_id', defaultValue: '', description: 'Jenkins username/password credential ID for Docker Hub')
+		string(name: 'dockerhub_credential_id', defaultValue: 'dockerhub-hechmi10', description: 'Jenkins username/password credential ID for Docker Hub')
 		string(name: 'docker_image_repo', defaultValue: 'docker.io/hechmi10/servpro-mobile', description: 'Docker image repository to push/deploy (example: docker.io/<username>/servpro-mobile)')
-		string(name: 'kubeconfig_credential_id', defaultValue: '', description: 'Jenkins secret file credential ID containing kubeconfig for kubectl access')
+		string(name: 'kubeconfig_credential_id', defaultValue: 'kubeconfig-servpro', description: 'Jenkins secret file credential ID containing kubeconfig for kubectl access')
 	}
 
 	triggers {
@@ -41,6 +41,20 @@ pipeline {
 			steps {
 				echo 'Building mobile image...'
 				bat 'docker build -t %IMAGE_REPO%:latest -t %IMAGE_REPO%:%IMAGE_TAG% .'
+			}
+		}
+
+		stage('Validate Required CI Parameters') {
+			steps {
+				script {
+					if (!params.dockerhub_credential_id?.trim()) {
+						error('dockerhub_credential_id is required for SCM-triggered runs. Set a default parameter value or provide it manually.')
+					}
+
+					if (params.deploy_k8s && !params.kubeconfig_credential_id?.trim()) {
+						error('kubeconfig_credential_id is required when deploy_k8s=true. Set a default parameter value or provide it manually.')
+					}
+				}
 			}
 		}
 
