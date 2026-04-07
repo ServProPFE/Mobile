@@ -53,17 +53,24 @@ pipeline {
 				withCredentials([usernamePassword(credentialsId: params.dockerhub_credential_id.trim(), usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
 					powershell '''
 						$ErrorActionPreference = "Stop"
+
+						$repo = "${env:IMAGE_REPO}".Replace("docker.io/", "")
+						$repoParts = $repo.Split('/')
+						if ($repoParts.Length -lt 2) {
+							throw "Invalid docker_image_repo format: ${env:IMAGE_REPO}. Expected docker.io/<username>/<repo>."
+						}
+
+						$repoOwner = $repoParts[0]
+						if ($repoOwner -ne $env:DOCKERHUB_USERNAME) {
+							throw "Credential username '$($env:DOCKERHUB_USERNAME)' does not match docker_image_repo namespace '$repoOwner'. Use matching Jenkins credential or update docker_image_repo."
+						}
+
 						$env:DOCKERHUB_PASSWORD | docker login -u $env:DOCKERHUB_USERNAME --password-stdin
 						if ($LASTEXITCODE -ne 0) {
 							throw "Docker login failed. Ensure Jenkins username is your Docker Hub username (not email) and password is a PAT token with write permission."
 						}
 
-						$repo = "${env:IMAGE_REPO}"
-						if ($repo -notmatch "/") {
-							throw "Invalid docker_image_repo format: $repo"
-						}
-
-						Write-Host "Docker login succeeded. Target repository: $repo"
+						Write-Host "Docker login succeeded. Target repository: ${env:IMAGE_REPO}"
 						docker logout
 					'''
 				}
