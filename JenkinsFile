@@ -3,7 +3,6 @@ pipeline {
 
 	parameters {
 		booleanParam(name: 'deploy_k8s', defaultValue: true, description: 'Deploy mobile image to Kubernetes after successful checks')
-		string(name: 'dockerhub_credential_id', defaultValue: '', description: 'Jenkins username/password credential ID for Docker Hub')
 		string(name: 'kubeconfig_credential_id', defaultValue: '', description: 'Jenkins secret file credential ID containing kubeconfig for kubectl access')
 	}
 
