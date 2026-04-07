@@ -95,14 +95,23 @@ pipeline {
 
 		stage('Deploy To Kubernetes') {
 			when {
-				allOf {
-					expression { params.deploy_k8s }
-					expression { params.dockerhub_credential_id?.trim() }
-				}
+				expression { params.deploy_k8s }
 			}
 			steps {
 				echo 'Deploying mobile to Kubernetes...'
-				bat 'kubectl apply -k ..\\k8s'
+				powershell '''
+					$kustomizePath = "..\\k8s"
+					if (Test-Path $kustomizePath) {
+						Write-Host "Applying manifests from $kustomizePath"
+						kubectl apply -k $kustomizePath
+					} else {
+						Write-Host "Kustomize path $kustomizePath not found. Skipping kubectl apply -k and continuing with rollout update."
+					}
+
+					if (-not "${params.dockerhub_credential_id}".Trim()) {
+						Write-Host "Docker Hub credential not provided. Deploying using locally built image tag: ${env:IMAGE_REPO}:${env:IMAGE_TAG}"
+					}
+				'''
 				bat 'kubectl set image deployment/%K8S_DEPLOYMENT% %K8S_CONTAINER%=%IMAGE_REPO%:%IMAGE_TAG% -n %K8S_NAMESPACE%'
 				bat 'kubectl rollout status deployment/%K8S_DEPLOYMENT% -n %K8S_NAMESPACE% --timeout=180s'
 			}
