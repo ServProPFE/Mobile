@@ -75,61 +75,6 @@ pipeline {
 				'''
 			}
 		}
-
-		
-
-		stage('Deploy To Kubernetes') {
-			when {
-				allOf {
-					expression { params.deploy_k8s }
-					expression { params.kubeconfig_credential_id?.trim() }
-				}
-			}
-			steps {
-				echo 'Deploying mobile to Kubernetes...'
-				withCredentials([file(credentialsId: params.kubeconfig_credential_id.trim(), variable: 'KUBECONFIG_FILE')]) {
-					powershell '''
-						$ErrorActionPreference = "Stop"
-						$env:KUBECONFIG = $env:KUBECONFIG_FILE
-						$useInsecureTls = "${params.k8s_insecure_skip_tls}" -eq "true"
-
-						function Invoke-Kubectl {
-							param(
-								[string[]]$Args
-							)
-
-							$fullArgs = @()
-							if ($useInsecureTls) {
-								$fullArgs += '--insecure-skip-tls-verify=true'
-							}
-							$fullArgs += $Args
-
-							& kubectl @fullArgs
-							if ($LASTEXITCODE -ne 0) {
-								throw "kubectl command failed: kubectl $($fullArgs -join ' ')"
-							}
-						}
-
-						kubectl version --client
-
-						try {
-							Invoke-Kubectl -Args @('get', 'namespace', '${env:K8S_NAMESPACE}') | Out-Null
-						} catch {
-							if ($_.Exception.Message -match 'unable to load root certificates|PEM block' -and -not $useInsecureTls) {
-								Write-Host 'Kubeconfig CA parsing failed; retrying with insecure TLS mode for this deployment.'
-								$useInsecureTls = $true
-								Invoke-Kubectl -Args @('get', 'namespace', '${env:K8S_NAMESPACE}') | Out-Null
-							} else {
-								throw
-							}
-						}
-
-						Invoke-Kubectl -Args @('set', 'image', 'deployment/${env:K8S_DEPLOYMENT}', '${env:K8S_CONTAINER}=${env:IMAGE_REPO}:${env:IMAGE_TAG}', '-n', '${env:K8S_NAMESPACE}')
-						Invoke-Kubectl -Args @('rollout', 'status', 'deployment/${env:K8S_DEPLOYMENT}', '-n', '${env:K8S_NAMESPACE}', '--timeout=180s')
-					'''
-				}
-			}
-		}
 	}
 
 	post {
