@@ -11,7 +11,14 @@
     "language": "Language"
   },
   "mobile": {
-    "profile": "Profile"
+    "profile": "Profile",
+    "profileSubtitle": "Manage your account and preferences",
+    "accountSummary": "Account summary",
+    "quickActions": "Quick actions",
+    "contactInfo": "Contact information",
+    "secureAccess": "Secure access",
+    "guestTitle": "Welcome to ServPro",
+    "guestSubtitle": "Sign in to manage bookings and access personalized offers."
   },
   "search": {
     "placeholder": "Search for a service...",
@@ -107,6 +114,7 @@
     "cancelConfirm": "Are you sure you want to cancel this booking?",
     "cancelButton": "Cancel booking",
     "cancelError": "Cancellation error",
+    "success": "Booking confirmed successfully",
     "myBookings": "My Bookings",
     "loading": "Loading your bookings...",
     "none": "No bookings found",
@@ -122,7 +130,8 @@
     "client": "Client",
     "date": "Date",
     "price": "Total price",
-    "bookNow": "Book now"
+    "bookNow": "Book now",
+    "browseServices": "Browse services"
   },
   "reviews": {
     "leave": "Leave a review",

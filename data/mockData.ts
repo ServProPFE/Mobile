@@ -23,7 +23,7 @@ export type BookingItem = {
   serviceName: string;
   providerName: string;
   scheduledAt: string;
-  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED';
+  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED' | 'COMPLETED';
   amount: number;
   currency: string;
 };

@@ -11,7 +11,14 @@
     "language": "اللغة"
   },
   "mobile": {
-    "profile": "الملف الشخصي"
+    "profile": "الملف الشخصي",
+    "profileSubtitle": "إدارة الحساب والتفضيلات",
+    "accountSummary": "ملخص الحساب",
+    "quickActions": "إجراءات سريعة",
+    "contactInfo": "معلومات التواصل",
+    "secureAccess": "وصول آمن",
+    "guestTitle": "مرحبًا بك في ServPro",
+    "guestSubtitle": "سجّل الدخول لإدارة الحجوزات والاستفادة من العروض الشخصية."
   },
   "search": {
     "placeholder": "ابحث عن خدمة...",
@@ -107,6 +114,7 @@
     "cancelConfirm": "هل أنت متأكد من إلغاء هذا الحجز؟",
     "cancelButton": "إلغاء الحجز",
     "cancelError": "خطأ في الإلغاء",
+    "success": "تم تأكيد الحجز بنجاح",
     "myBookings": "حجوزاتي",
     "loading": "جارٍ تحميل الحجوزات...",
     "none": "لا توجد حجوزات",
@@ -122,7 +130,8 @@
     "client": "العميل",
     "date": "التاريخ",
     "price": "السعر الإجمالي",
-    "bookNow": "احجز الآن"
+    "bookNow": "احجز الآن",
+    "browseServices": "تصفح الخدمات"
   },
   "reviews": {
     "leave": "اترك تقييما",

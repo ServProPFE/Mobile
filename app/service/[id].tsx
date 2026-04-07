@@ -1,15 +1,17 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { AppBackground } from '@/components/servpro/AppBackground';
 import { AppTheme } from '@/constants/theme';
+import { useAuth } from '@/context/AuthContext';
 import type { ServiceItem } from '@/data/mockData';
 import { servproDataService } from '@/services/servproDataService';
 
 export default function ServiceDetailScreen() {
   const { t } = useTranslation();
+  const { isAuthenticated, user } = useAuth();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [services, setServices] = useState<ServiceItem[]>([]);
 
@@ -49,6 +51,24 @@ export default function ServiceDetailScreen() {
               <Text style={styles.noteText}>
                 {t('chatbot.welcomeMessage')}
               </Text>
+            </View>
+
+            <View style={styles.actionWrap}>
+              {isAuthenticated ? (
+                user?.type === 'CLIENT' ? (
+                  <Pressable
+                    style={styles.bookBtn}
+                    onPress={() => router.push(`/booking/${service._id}` as never)}>
+                    <Text style={styles.bookBtnText}>{t('service.bookNow')}</Text>
+                  </Pressable>
+                ) : (
+                  <Text style={styles.helperText}>{t('service.onlyClients')}</Text>
+                )
+              ) : (
+                <Pressable style={styles.bookBtn} onPress={() => router.push('/auth/login' as never)}>
+                  <Text style={styles.bookBtnText}>{t('nav.login')}</Text>
+                </Pressable>
+              )}
             </View>
           </View>
         ) : (
@@ -136,6 +156,26 @@ const styles = StyleSheet.create({
   noteText: {
     marginTop: 6,
     color: '#cbd5e1',
+    lineHeight: 20,
+  },
+  actionWrap: {
+    marginTop: 16,
+  },
+  bookBtn: {
+    borderRadius: 12,
+    backgroundColor: AppTheme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 46,
+  },
+  bookBtnText: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  helperText: {
+    color: AppTheme.colors.mutedText,
+    textAlign: 'center',
     lineHeight: 20,
   },
   notFound: {
