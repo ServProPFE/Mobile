@@ -1,98 +1,111 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { AppBackground } from '@/components/servpro/AppBackground';
+import { Hero } from '@/components/servpro/Hero';
+import { OfferCard } from '@/components/servpro/OfferCard';
+import { SectionHeader } from '@/components/servpro/SectionHeader';
+import { ServiceCard } from '@/components/servpro/ServiceCard';
+import { AppTheme } from '@/constants/theme';
+import { servproDataService } from '@/services/servproDataService';
+import type { OfferItem, ServiceItem } from '@/data/mockData';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { t } = useTranslation();
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [offers, setOffers] = useState<OfferItem[]>([]);
+  const [search, setSearch] = useState('');
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    (async () => {
+      const [servicesData, offersData] = await Promise.all([
+        servproDataService.getServices(),
+        servproDataService.getOffers(),
+      ]);
+      setServices(servicesData);
+      setOffers(offersData);
+    })();
+  }, []);
+
+  const filteredServices = useMemo(() => {
+    if (!search.trim()) {
+      return services;
+    }
+    return services.filter((service) =>
+      t(service.name, { defaultValue: service.name }).toLowerCase().includes(search.trim().toLowerCase()),
+    );
+  }, [search, services, t]);
+
+  return (
+    <AppBackground>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Hero
+          title={t('hero.title')}
+          subtitle={t('hero.subtitle')}
+        />
+
+        <TextInput
+          style={styles.search}
+          placeholder={t('search.placeholder')}
+          value={search}
+          onChangeText={setSearch}
+          placeholderTextColor="#94a3b8"
+        />
+
+        {offers.length > 0 ? (
+          <View style={styles.section}>
+            <SectionHeader title={t('offers.title')} rightLabel={t('offers.discount', { value: 0 })} />
+            {offers.map((offer) => (
+              <OfferCard key={offer._id} item={offer} />
+            ))}
+          </View>
+        ) : null}
+
+        <View style={styles.section}>
+          <SectionHeader title={t('services.title')} rightLabel={`${filteredServices.length} ${t('services.title').toLowerCase()}`} />
+          {filteredServices.map((service) => (
+            <ServiceCard
+              key={service._id}
+              item={service}
+              onPress={(selected) => router.push(`/service/${selected._id}` as never)}
+            />
+          ))}
+          {filteredServices.length === 0 ? (
+            <Text style={styles.emptyText}>{t('services.noResults')}</Text>
+          ) : null}
+        </View>
+      </ScrollView>
+    </AppBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 28,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  search: {
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    height: 48,
+    paddingHorizontal: 14,
+    color: AppTheme.colors.text,
+    fontWeight: '600',
+    marginBottom: 16,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  section: {
+    marginTop: 8,
+    marginBottom: 10,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: AppTheme.colors.mutedText,
+    padding: 14,
   },
 });

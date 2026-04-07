@@ -5,37 +5,68 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+export const AppTheme = {
+  colors: {
+    primary: '#0f766e',
+    secondary: '#fb923c',
+    danger: '#dc2626',
+    warning: '#f59e0b',
+    text: '#0f172a',
+    mutedText: '#475569',
+    background: '#f8fafc',
+    card: '#ffffff',
+    border: '#cbd5e1',
+    dark: '#0f172a',
+    white: '#ffffff',
+  },
+  spacing: {
+    xs: 6,
+    sm: 10,
+    md: 14,
+    lg: 20,
+    xl: 28,
+  },
+  radius: {
+    sm: 10,
+    md: 14,
+    lg: 20,
+    xl: 28,
+  },
+  shadow: {
+    card: {
+      shadowColor: '#020617',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 4,
+    },
+  },
+};
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: AppTheme.colors.text,
+    background: AppTheme.colors.background,
+    tint: AppTheme.colors.primary,
+    icon: '#64748b',
+    tabIconDefault: '#94a3b8',
+    tabIconSelected: AppTheme.colors.primary,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: '#e2e8f0',
+    background: '#0f172a',
+    tint: '#99f6e4',
+    icon: '#cbd5e1',
+    tabIconDefault: '#94a3b8',
+    tabIconSelected: '#99f6e4',
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
@@ -45,9 +76,9 @@ export const Fonts = Platform.select({
     mono: 'monospace',
   },
   web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    sans: "'Manrope', 'Segoe UI', sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    rounded: "'Space Grotesk', 'Manrope', sans-serif",
+    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace",
   },
 });
