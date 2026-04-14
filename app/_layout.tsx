@@ -25,6 +25,8 @@ export default function RootLayout() {
           <Stack.Screen name="auth/register" options={{ title: t('auth.registerTitle') }} />
           <Stack.Screen name="booking/[serviceId]" options={{ title: t('booking.bookNow') }} />
           <Stack.Screen name="service/[id]" options={{ title: t('services.viewDetails') }} />
+          <Stack.Screen name="providers/index" options={{ title: t('providers.title') }} />
+          <Stack.Screen name="providers/[providerId]" options={{ title: t('providers.portfolioTitle') }} />
         </Stack>
         <StatusBar style="dark" />
       </ThemeProvider>

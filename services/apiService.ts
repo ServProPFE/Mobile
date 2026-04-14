@@ -17,11 +17,17 @@ class ApiService {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
-      method: options.method ?? 'GET',
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: options.method ?? 'GET',
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+    } catch (error) {
+      const details = error instanceof Error ? error.message : 'Unknown network error';
+      throw new Error(`Network request failed for ${url}. ${details}. Verify API server availability and mobile API base URL.`);
+    }
 
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {

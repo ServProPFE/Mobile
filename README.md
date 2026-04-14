@@ -15,7 +15,10 @@ It follows the same visual direction as the web frontend:
 - Service details screen
 - Authentication screens (login/register)
 - Profile management and session persistence
+- Logout actions in profile (header and quick actions)
 - Bookings view with status badges
+- AI chatbot screen (mobile tab)
+- Providers directory and provider portfolio screens
 - Localization with English/Arabic resources aligned with the frontend app
 - API integration with fallback mock data for offline/demo usage
 
@@ -69,14 +72,30 @@ Exposed ports:
 
 ## API Configuration
 
-API base URL is resolved from Expo config extra field if available:
+API base URL is resolved with this priority:
 
-- `expo.extra.apiBaseUrl`
+1. `EXPO_PUBLIC_API_BASE_URL`
+2. `expo.extra.apiBaseUrl`
+3. Render production fallback (`https://servpro-backend.onrender.com`)
+4. LAN host inferred from Expo runtime (`http://<LAN_IP>:4000`)
+5. Platform local fallback (`http://10.0.2.2:4000` on Android emulator, otherwise `http://localhost:4000`)
 
-Otherwise defaults are:
+Set this in `ServProMobile/.env` for stable mobile deployment:
 
-- Android emulator: `http://10.0.2.2:4000`
-- Other platforms: `http://localhost:4000`
+```env
+EXPO_PUBLIC_API_BASE_URL=https://servpro-backend.onrender.com
+```
+
+Then restart Metro with cache clear:
+
+```bash
+npx expo start -c
+```
+
+If chatbot displays the fallback message about AI availability, check:
+
+- `https://servpro-backend.onrender.com/chatbot/health`
+- backend Render env var `PYTHON_AI_SERVICE`
 
 For containerized/Kubernetes runs, ensure backend DNS/URL is reachable from the mobile runtime environment.
 
@@ -89,7 +108,7 @@ For containerized/Kubernetes runs, ensure backend DNS/URL is reachable from the 
 
 ## Key Folders
 
-- `app/`: screens and routing (tabs, auth, service details)
+- `app/`: screens and routing (tabs, auth, service details, chatbot, providers)
 - `components/servpro/`: reusable branded UI blocks
 - `context/`: auth context and session management
 - `services/`: API, auth, storage, and data providers

@@ -23,6 +23,33 @@ export default function ServiceDetailScreen() {
   }, []);
 
   const service = useMemo(() => services.find((item) => item._id === id), [id, services]);
+  const providerId = useMemo(() => {
+    if (!service?.provider) return '';
+    if (typeof service.provider === 'string') return service.provider;
+    return service.provider._id || '';
+  }, [service?.provider]);
+
+  const renderAction = () => {
+    if (!isAuthenticated) {
+      return (
+        <Pressable style={styles.bookBtn} onPress={() => router.push('/auth/login' as never)}>
+          <Text style={styles.bookBtnText}>{t('nav.login')}</Text>
+        </Pressable>
+      );
+    }
+
+    if (user?.type === 'CLIENT') {
+      return (
+        <Pressable
+          style={styles.bookBtn}
+          onPress={() => router.push(`/booking/${service?._id}` as never)}>
+          <Text style={styles.bookBtnText}>{t('service.bookNow')}</Text>
+        </Pressable>
+      );
+    }
+
+    return <Text style={styles.helperText}>{t('service.onlyClients')}</Text>;
+  };
 
   return (
     <AppBackground>
@@ -51,24 +78,18 @@ export default function ServiceDetailScreen() {
               <Text style={styles.noteText}>
                 {t('chatbot.welcomeMessage')}
               </Text>
+
+              {providerId ? (
+                <Pressable
+                  style={styles.portfolioBtn}
+                  onPress={() => router.push(`/providers/${providerId}` as never)}>
+                  <Text style={styles.portfolioBtnText}>{t('providers.openPortfolio')}</Text>
+                </Pressable>
+              ) : null}
             </View>
 
             <View style={styles.actionWrap}>
-              {isAuthenticated ? (
-                user?.type === 'CLIENT' ? (
-                  <Pressable
-                    style={styles.bookBtn}
-                    onPress={() => router.push(`/booking/${service._id}` as never)}>
-                    <Text style={styles.bookBtnText}>{t('service.bookNow')}</Text>
-                  </Pressable>
-                ) : (
-                  <Text style={styles.helperText}>{t('service.onlyClients')}</Text>
-                )
-              ) : (
-                <Pressable style={styles.bookBtn} onPress={() => router.push('/auth/login' as never)}>
-                  <Text style={styles.bookBtnText}>{t('nav.login')}</Text>
-                </Pressable>
-              )}
+              {renderAction()}
             </View>
           </View>
         ) : (
@@ -157,6 +178,22 @@ const styles = StyleSheet.create({
     marginTop: 6,
     color: '#cbd5e1',
     lineHeight: 20,
+  },
+  portfolioBtn: {
+    marginTop: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  portfolioBtnText: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 12,
+    textTransform: 'uppercase',
   },
   actionWrap: {
     marginTop: 16,

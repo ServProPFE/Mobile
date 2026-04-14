@@ -29,6 +29,11 @@ export default function ProfileScreen() {
                   : t('mobile.guestSubtitle', { defaultValue: t('auth.noAccount') })}
               </Text>
             </View>
+            {isAuthenticated ? (
+              <Pressable style={styles.headerLogoutBtn} onPress={() => logout()}>
+                <Ionicons name="log-out-outline" size={18} color="#ffffff" />
+              </Pressable>
+            ) : null}
           </View>
 
           <View style={styles.languageRow}>
@@ -168,6 +173,16 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 22,
     fontWeight: '900',
+  },
+  headerLogoutBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerCopy: {
     flex: 1,

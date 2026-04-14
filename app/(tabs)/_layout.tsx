@@ -11,6 +11,7 @@ const homeTabIcon = ({ color }: { color: string }) => <Ionicons size={20} name="
 const servicesTabIcon = ({ color }: { color: string }) => <Ionicons size={20} name="grid" color={color} />;
 const bookingsTabIcon = ({ color }: { color: string }) => <Ionicons size={20} name="calendar" color={color} />;
 const transactionsTabIcon = ({ color }: { color: string }) => <Ionicons size={20} name="wallet" color={color} />;
+const chatbotTabIcon = ({ color }: { color: string }) => <Ionicons size={20} name="chatbubble-ellipses" color={color} />;
 const profileTabIcon = ({ color }: { color: string }) => <Ionicons size={20} name="person" color={color} />;
 
 export default function TabLayout() {
@@ -62,6 +63,13 @@ export default function TabLayout() {
         options={{
           title: t('nav.myTransactions'),
           tabBarIcon: transactionsTabIcon,
+        }}
+      />
+      <Tabs.Screen
+        name="chatbot"
+        options={{
+          title: t('chatbot.title'),
+          tabBarIcon: chatbotTabIcon,
         }}
       />
       <Tabs.Screen

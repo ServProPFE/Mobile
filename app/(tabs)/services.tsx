@@ -56,6 +56,11 @@ export default function ServicesScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.headCard}>
           <SectionHeader title={t('services.allTitle')} rightLabel={`${filtered.length} ${t('services.title').toLowerCase()}`} />
+          <Pressable
+            style={styles.providerBtn}
+            onPress={() => router.push('/providers' as never)}>
+            <Text style={styles.providerBtnText}>{t('providers.openDirectory')}</Text>
+          </Pressable>
           <TextInput
             style={styles.search}
             placeholder={t('search.placeholder')}
@@ -121,6 +126,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     color: AppTheme.colors.text,
     fontWeight: '600',
+    marginTop: 10,
+  },
+  providerBtn: {
+    marginTop: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#0f172a',
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 40,
+  },
+  providerBtnText: {
+    color: '#0f172a',
+    fontWeight: '800',
+    fontSize: 12,
+    textTransform: 'uppercase',
   },
   filters: {
     gap: 8,
