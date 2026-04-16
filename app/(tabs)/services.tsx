@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { AppBackground } from '@/components/servpro/AppBackground';
 import { SectionHeader } from '@/components/servpro/SectionHeader';
 import { ServiceCard } from '@/components/servpro/ServiceCard';
-import { AppTheme } from '@/constants/theme';
+import { AppTheme, getResponsiveLayout } from '@/constants/theme';
 import type { ServiceCategory, ServiceItem } from '@/data/mockData';
 import { servproDataService } from '@/services/servproDataService';
 
@@ -23,6 +23,8 @@ const categories: (ServiceCategory | 'ALL')[] = [
 export default function ServicesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const responsive = getResponsiveLayout(width);
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | 'ALL'>('ALL');
@@ -53,7 +55,8 @@ export default function ServicesScreen() {
 
   return (
     <AppBackground>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: responsive.horizontalPadding }]}>
+        <View style={[styles.contentWrap, { maxWidth: responsive.contentMaxWidth }]}> 
         <View style={styles.headCard}>
           <SectionHeader title={t('services.allTitle')} rightLabel={`${filtered.length} ${t('services.title').toLowerCase()}`} />
           <Pressable
@@ -98,6 +101,7 @@ export default function ServicesScreen() {
             <Text style={styles.emptyText}>{t('services.noResults')}</Text>
           ) : null}
         </View>
+        </View>
       </ScrollView>
     </AppBackground>
   );
@@ -105,9 +109,12 @@ export default function ServicesScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 22,
+  },
+  contentWrap: {
+    width: '100%',
+    alignSelf: 'center',
   },
   headCard: {
     borderWidth: 1,

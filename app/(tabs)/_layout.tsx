@@ -2,6 +2,8 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
@@ -17,6 +19,10 @@ const profileTabIcon = ({ color }: { color: string }) => <Ionicons size={20} nam
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isTablet = width >= 768;
 
   return (
     <Tabs
@@ -24,15 +30,18 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarInactiveTintColor: '#94a3b8',
         tabBarStyle: {
-          height: 62,
-          paddingBottom: 8,
-          paddingTop: 6,
+          height: (isTablet ? 72 : 62) + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: isTablet ? 8 : 6,
           borderTopColor: '#e2e8f0',
           backgroundColor: '#ffffff',
         },
         tabBarLabelStyle: {
           fontWeight: '700',
-          fontSize: 12,
+          fontSize: isCompact ? 11 : 12,
+        },
+        tabBarItemStyle: {
+          maxWidth: isTablet ? 132 : undefined,
         },
         headerShown: false,
         tabBarButton: HapticTab,

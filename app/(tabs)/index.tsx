@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { AppBackground } from '@/components/servpro/AppBackground';
@@ -8,7 +8,7 @@ import { Hero } from '@/components/servpro/Hero';
 import { OfferCard } from '@/components/servpro/OfferCard';
 import { SectionHeader } from '@/components/servpro/SectionHeader';
 import { ServiceCard } from '@/components/servpro/ServiceCard';
-import { AppTheme } from '@/constants/theme';
+import { AppTheme, getResponsiveLayout } from '@/constants/theme';
 import { servproDataService } from '@/services/servproDataService';
 import type { OfferItem, ServiceItem } from '@/data/mockData';
 
@@ -18,6 +18,8 @@ export default function HomeScreen() {
   const [offers, setOffers] = useState<OfferItem[]>([]);
   const [search, setSearch] = useState('');
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const responsive = getResponsiveLayout(width);
 
   useEffect(() => {
     (async () => {
@@ -41,41 +43,48 @@ export default function HomeScreen() {
 
   return (
     <AppBackground>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Hero
-          title={t('hero.title')}
-          subtitle={t('hero.subtitle')}
-        />
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingHorizontal: responsive.horizontalPadding }]}
+      >
+        <View style={[styles.contentWrap, { maxWidth: responsive.contentMaxWidth }]}>
+          <Hero title={t('hero.title')} subtitle={t('hero.subtitle')} />
 
-        <TextInput
-          style={styles.search}
-          placeholder={t('search.placeholder')}
-          value={search}
-          onChangeText={setSearch}
-          placeholderTextColor="#94a3b8"
-        />
+          <TextInput
+            style={styles.search}
+            placeholder={t('search.placeholder')}
+            value={search}
+            onChangeText={setSearch}
+            placeholderTextColor="#94a3b8"
+          />
 
-        {offers.length > 0 ? (
-          <View style={styles.section}>
-            <SectionHeader title={t('offers.title')} rightLabel={t('offers.discount', { value: 0 })} />
-            {offers.map((offer) => (
-              <OfferCard key={offer._id} item={offer} />
-            ))}
-          </View>
-        ) : null}
-
-        <View style={styles.section}>
-          <SectionHeader title={t('services.title')} rightLabel={`${filteredServices.length} ${t('services.title').toLowerCase()}`} />
-          {filteredServices.map((service) => (
-            <ServiceCard
-              key={service._id}
-              item={service}
-              onPress={(selected) => router.push(`/service/${selected._id}` as never)}
-            />
-          ))}
-          {filteredServices.length === 0 ? (
-            <Text style={styles.emptyText}>{t('services.noResults')}</Text>
+          {offers.length > 0 ? (
+            <View style={styles.section}>
+              <SectionHeader
+                title={t('offers.title')}
+                rightLabel={t('offers.discount', { value: 0 })}
+              />
+              {offers.map((offer) => (
+                <OfferCard key={offer._id} item={offer} />
+              ))}
+            </View>
           ) : null}
+
+          <View style={styles.section}>
+            <SectionHeader
+              title={t('services.title')}
+              rightLabel={`${filteredServices.length} ${t('services.title').toLowerCase()}`}
+            />
+            {filteredServices.map((service) => (
+              <ServiceCard
+                key={service._id}
+                item={service}
+                onPress={(selected) => router.push(`/service/${selected._id}` as never)}
+              />
+            ))}
+            {filteredServices.length === 0 ? (
+              <Text style={styles.emptyText}>{t('services.noResults')}</Text>
+            ) : null}
+          </View>
         </View>
       </ScrollView>
     </AppBackground>
@@ -84,9 +93,12 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 28,
+  },
+  contentWrap: {
+    width: '100%',
+    alignSelf: 'center',
   },
   search: {
     borderWidth: 1,

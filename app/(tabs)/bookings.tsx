@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 
 import { AppBackground } from '@/components/servpro/AppBackground';
 import { SectionHeader } from '@/components/servpro/SectionHeader';
-import { AppTheme } from '@/constants/theme';
+import { AppTheme, getResponsiveLayout } from '@/constants/theme';
 import type { BookingItem } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 import { servproDataService } from '@/services/servproDataService';
@@ -33,6 +33,8 @@ const toDate = (value?: string) => {
 export default function BookingsScreen() {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
+  const { width } = useWindowDimensions();
+  const responsive = getResponsiveLayout(width);
   const [bookings, setBookings] = useState<BookingItem[]>([]);
 
   const loadBookings = useCallback(async () => {
@@ -89,7 +91,8 @@ export default function BookingsScreen() {
 
   return (
     <AppBackground>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: responsive.horizontalPadding }]}>
+        <View style={[styles.contentWrap, { maxWidth: responsive.contentMaxWidth }]}> 
         <View style={styles.heroCard}>
           <View style={styles.heroTopRow}>
             <View>
@@ -175,6 +178,7 @@ export default function BookingsScreen() {
             <Link href={'/services' as never} style={styles.emptyLink}>{t('booking.browseServices')}</Link>
           </View>
         )}
+        </View>
       </ScrollView>
     </AppBackground>
   );
@@ -182,9 +186,12 @@ export default function BookingsScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 28,
+  },
+  contentWrap: {
+    width: '100%',
+    alignSelf: 'center',
   },
   heroCard: {
     borderRadius: AppTheme.radius.xl,

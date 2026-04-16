@@ -1,17 +1,19 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { AppTheme } from '@/constants/theme';
+import { AppTheme, getResponsiveLayout } from '@/constants/theme';
 
-export function Hero({ title, subtitle }: { title: string; subtitle: string }) {
+export function Hero({ title, subtitle }: Readonly<{ title: string; subtitle: string }>) {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const responsive = getResponsiveLayout(width);
 
   return (
     <View style={styles.hero}>
       <View style={styles.glowOne} />
       <View style={styles.glowTwo} />
       <Text style={styles.kicker}>{t('services.title')}</Text>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { fontSize: responsive.heroTitleSize, lineHeight: responsive.heroTitleLineHeight }]}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
     </View>
   );

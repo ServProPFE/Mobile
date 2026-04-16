@@ -82,3 +82,30 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace",
   },
 });
+
+export const getResponsiveLayout = (width: number) => {
+  if (width >= 1024) {
+    return {
+      horizontalPadding: 28,
+      contentMaxWidth: 860,
+      heroTitleSize: 36,
+      heroTitleLineHeight: 42,
+    };
+  }
+
+  if (width >= 768) {
+    return {
+      horizontalPadding: 24,
+      contentMaxWidth: 720,
+      heroTitleSize: 34,
+      heroTitleLineHeight: 40,
+    };
+  }
+
+  return {
+    horizontalPadding: 16,
+    contentMaxWidth: 560,
+    heroTitleSize: 30,
+    heroTitleLineHeight: 36,
+  };
+};
